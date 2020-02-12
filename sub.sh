@@ -48,13 +48,11 @@ else
     curl -s -X POST --data "url=$1&only_resolved=1&Submit1=Submit" https://suip.biz/?act=findomain| grep $1 | cut -d ">" -f 2 | awk 'NF' |egrep -v "[[:space:]]"|uniq >>test/Suip.biz_Findomain_subdomains.txt  
 	    echo "[+] Suip.biz Findomain Over"
 	
-	cat test/*_subdomains.txt | uniq | sort -u | tee test/subdomains_$1.log
-	echo "Detect Subdomain $(wc -l test/subdomains_$1.log|awk '{ print $1 }' )" "=> ${1}"
+	cat test/*_subdomains.txt | uniq | sort -u > test/subdomains_$1.log
+	cat test/$1_subdomains.log|httprobe -t 15000 -c 50|cut -d "/" -f3|sort -u > test/alive_$1.log
 	
-	cat test/$1_subdomains.log|httprobe -t 15000 -c 50|cut -d "/" -f3|sort -u |tee test/alive_$1.log
+	echo "Detect Subdomain $(wc -l test/subdomains_$1.log|awk '{ print $1 }' )" "=> ${1}"
 	echo "Detect Alive Subdomain $(wc -l test/alive_$1.log|awk '{ print $1 }' )" "=> ${1}"
 	
-	cat test/alive_$1.log | dnsgen - |./massdns/bin/massdns -r massdns/lists/resolvers.txt -t A -o S -w massdns/output.txt;cat massdns/output.txt | awk -F '. ' '{print $1}' | sort -u | uniq > test/massdns_dnsgen_$1.log;
-	echo "Detect DNSGen&MassDNS Subdomain $(wc -l test/massdns_dnsgen_$1.log|awk '{ print $1 }' )" "=> ${1}"
 	
 fi
